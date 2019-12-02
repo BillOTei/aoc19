@@ -10,7 +10,7 @@ const recurseToFuel = (acc, mass) => {
   }
 };
 
-fs.readFile("./day1_input", "utf8", function(err, contents) {
+fs.readFile(process.argv[2], "utf8", function(err, contents) {
   const masses = contents.split("\n");
 
   console.log(masses.reduce((acc, mass) => acc + toFuel(mass), 0)); // Part 1
