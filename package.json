@@ -1,0 +1,32 @@
+{
+  "name": "aoc19",
+  "version": "1.0.0",
+  "description": "advent of code 2019 solutions in js",
+  "main": "day1.js",
+  "dependencies": {
+    "file-system": "^2.2.2"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/BillOTei/aoc19.git"
+  },
+  "keywords": [
+    "challenge",
+    "advent",
+    "of",
+    "code",
+    "aoc",
+    "2019",
+    "christmas"
+  ],
+  "author": "billotei",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/BillOTei/aoc19/issues"
+  },
+  "homepage": "https://github.com/BillOTei/aoc19#readme"
+}
