@@ -71,8 +71,9 @@ fs.readFile("./day7_input", "utf8", function(err, contents) {
     let relativeBase = 0;
     let parameters = {};
     let error = false;
-    let end;
+    let end = false;
     let inputsConsumed = false;
+    let opCode99Encountered = false;
 
     for (
       let index = start;
@@ -81,8 +82,8 @@ fs.readFile("./day7_input", "utf8", function(err, contents) {
     ) {
       const operation = getOpCodeAndMode(intCode[index].toString());
       const opCode = parseInt(operation[0]);
-      if (opCode === 99 || inputsConsumed) {
-        end = index;
+      if (opCode === 99 || end) {
+        opCode99Encountered = opCode === 99;
         break;
       }
       const modParams = [
@@ -123,7 +124,10 @@ fs.readFile("./day7_input", "utf8", function(err, contents) {
           loopLength = 4;
           break;
         case 3:
-          if (phaseSetting === -1) {
+          if (inputsConsumed) {
+            end = true;
+            break;
+          } else if (phaseSetting === -1) {
             intCode[
               applyModWrite(intCode, modParams[0], index + 1, relativeBase)
             ] = userInput;
@@ -210,19 +214,51 @@ fs.readFile("./day7_input", "utf8", function(err, contents) {
       }
     }
 
-    return solution;
+    return { solution, opCode99Encountered };
   };
   const runAmpCtrlSoftware = (phase, inputSignal) =>
     intCodeComputer(input, inputSignal, phase);
   const initPhases = [5, 6, 7, 8, 9];
   const allPhases = perms(initPhases);
-  const signal = phases => {
-    return phases.reduce(
-      (prevOutput, phase) => runAmpCtrlSoftware(phase, prevOutput),
-      0
-    );
-  };
-  const allSignals = allPhases.map(phases => signal(phases));
-
+  // const signal = phases => {
+  //   return phases.reduce(
+  //     (prevOutput, phase) => runAmpCtrlSoftware(phase, prevOutput),
+  //     0
+  //   );
+  // };
+  // const allSignals = allPhases.map(phases => signal(phases));
+  //
   // console.log(Math.max(...allSignals)); // Part 1
+
+  const signal = phases => {
+    let i = 0;
+    let prevOutput = 0;
+    let ampInput;
+    const run = true;
+    const l = phases.length;
+    let phasesConsumed = false;
+    while (run) {
+      if (!phasesConsumed) {
+        ampInput = phases[i];
+      } else {
+        ampInput = prevOutput;
+      }
+      const { solution, opCode99Encountered } = runAmpCtrlSoftware(
+        ampInput,
+        prevOutput
+      );
+      prevOutput = solution;
+      if (i === 4) {
+        phasesConsumed = true;
+      }
+      if (opCode99Encountered && i === 4) {
+        break;
+      }
+      i = (i + 1) % l;
+    }
+
+    return prevOutput;
+  };
+
+  console.log(signal([9, 8, 7, 6, 5]));
 });
