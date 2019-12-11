@@ -241,7 +241,7 @@ fs.readFile("./day7_input", "utf8", function(err, contents) {
       if (!phasesConsumed) {
         ampInput = phases[i];
       } else {
-        ampInput = prevOutput;
+        ampInput = -1;
       }
       const { solution, opCode99Encountered } = runAmpCtrlSoftware(
         ampInput,
@@ -251,7 +251,7 @@ fs.readFile("./day7_input", "utf8", function(err, contents) {
       if (i === 4) {
         phasesConsumed = true;
       }
-      if (opCode99Encountered && i === 4) {
+      if (opCode99Encountered) {
         break;
       }
       i = (i + 1) % l;
