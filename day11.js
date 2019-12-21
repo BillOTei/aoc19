@@ -233,8 +233,9 @@ fs.readFile("./day11_input", "utf8", function(err, contents) {
   };
   let colorsMap = new Map();
   let point = [0, 0];
-  const setPoint = p => colorsMap.set(p.join(), { color: 0, paintsCount: 0 });
-  setPoint(point);
+  const setPoint = (p, part2 = false) =>
+    colorsMap.set(p.join(), { color: part2 ? 1 : 0, paintsCount: 0 });
+  setPoint(point, true);
   let direction = "up";
   const nextPoint = (currDirection, directionCommand, current) => {
     switch (currDirection) {
@@ -283,5 +284,38 @@ fs.readFile("./day11_input", "utf8", function(err, contents) {
     }
   }
 
-  console.log(colorsMap.size); // Part 1
+  // console.log(colorsMap.size); // Part 1
+  const rawMap = [...colorsMap].map(p => [
+    parseInt(p[0].split(",")[0], 10),
+    parseInt(p[0].split(",")[1], 10),
+    p[1].color
+  ]);
+  let byRow = new Map();
+  for (let i = 0; i < rawMap.length; i++) {
+    const [x, y, c] = rawMap[i];
+    byRow.has(y)
+      ? byRow.set(y, [...byRow.get(y), rawMap[i]])
+      : byRow.set(y, [rawMap[i]]);
+  }
+  console.log(
+    [...byRow]
+      .sort((a, b) => {
+        return a[0] > b[0];
+      })
+      .reverse()
+      .map(r => {
+        const sortedR = r[1][0][0] > 1 ? r[1].reverse() : r[1];
+        let prepend = [];
+        let append = [];
+        if (sortedR[0][0] > 0) prepend = [[0, sortedR[0][1], 0]];
+        if (sortedR[sortedR.length - 1][0] < 42) {
+          for (let i = 1; i <= 42 - sortedR[sortedR.length - 1][0]; i++) {
+            append.push([sortedR[sortedR.length - 1][0] + i, sortedR[0][1], 0]);
+          }
+        }
+
+        return [...prepend, ...sortedR, ...append];
+      })
+      .map(r => r.reduce((acc, p) => (p[2] === 1 ? acc + "#" : acc + "."), ""))
+  );
 });
