@@ -43,18 +43,23 @@ fs.readFile("./day11_input", "utf8", function(err, contents) {
     ];
   };
 
-  const intCodeComputer = (input, userInput = 0) => {
+  const intCodeComputer = (input, userInput, cache) => {
     const intCode = [...input];
     let loopLength = 1;
-    let solution = [];
-    let relativeBase = 0;
+    let relativeBase = cache !== undefined ? cache.relativeBase : 0;
     let parameters = {};
     let error = false;
+    let waiting = false;
 
-    for (let index = 0; index < intCode.length && !error; index += loopLength) {
+    for (
+      let index = cache !== undefined ? cache.position : 0;
+      index < intCode.length && !error && !waiting;
+      index += loopLength
+    ) {
       const operation = getOpCodeAndMode(intCode[index].toString());
       const opCode = parseInt(operation[0]);
       if (opCode === 99) {
+        cache.saveCache(intCode, opCode, index, relativeBase);
         break;
       }
       const modParams = [
@@ -95,18 +100,38 @@ fs.readFile("./day11_input", "utf8", function(err, contents) {
           loopLength = 4;
           break;
         case 3:
-          intCode[
-            applyModWrite(intCode, modParams[0], index + 1, relativeBase)
-          ] = userInput;
           loopLength = 2;
+          if (userInput === undefined) {
+            if (cache.halt(opCode, userInput)) {
+              cache.saveCache(
+                intCode,
+                opCode,
+                index + loopLength,
+                relativeBase
+              );
+              waiting = true;
+            } else {
+              intCode[
+                applyModWrite(intCode, modParams[0], index + 1, relativeBase)
+              ] = userInput;
+            }
+          } else {
+            intCode[
+              applyModWrite(intCode, modParams[0], index + 1, relativeBase)
+            ] = userInput;
+          }
           break;
         case 4:
           parameters = {
             first: applyMod(intCode, modParams[0], index + 1, relativeBase)
           };
 
-          solution.push(parameters.first);
           loopLength = 2;
+          cache.output.push(parameters.first);
+          if (cache.halt(opCode, userInput)) {
+            cache.saveCache(intCode, opCode, index + loopLength, relativeBase);
+            waiting = true;
+          }
           break;
         case 5:
           parameters = {
@@ -182,48 +207,81 @@ fs.readFile("./day11_input", "utf8", function(err, contents) {
       }
     }
 
-    return solution;
+    return cache;
   };
 
+  let hullPaintingRobot = {
+    intCode: input,
+    opCode: 0,
+    position: 0,
+    relativeBase: 0,
+    output: [],
+    halt: function(opCode, input) {
+      if (opCode === 99) return true;
+      if (opCode === 3 && input === undefined) return true;
+      return opCode === 4 && this.output.length > 1;
+    },
+    saveCache: function(intCode, opCode, position, relativeBase) {
+      this.intCode = intCode;
+      this.opCode = opCode;
+      this.position = position;
+      this.relativeBase = relativeBase;
+    },
+    resetOutput: function() {
+      this.output = [];
+    }
+  };
   let colorsMap = new Map();
   let point = [0, 0];
-  colorsMap.set(point.join(), { color: 0, paintsCount: 0 });
-  let run = true;
+  const setPoint = p => colorsMap.set(p.join(), { color: 0, paintsCount: 0 });
+  setPoint(point);
   let direction = "up";
   const nextPoint = (currDirection, directionCommand, current) => {
     switch (currDirection) {
       case "up":
         return directionCommand === 0
-          ? [current[0] - 1, current[1]]
-          : [current[0] + 1, current[1]];
+          ? [[current[0] - 1, current[1]], "left"]
+          : [[current[0] + 1, current[1]], "right"];
       case "left":
         return directionCommand === 0
-          ? [current[0], current[1] - 1]
-          : [current[0], current[1] + 1];
+          ? [[current[0], current[1] - 1], "down"]
+          : [[current[0], current[1] + 1], "up"];
       case "down":
         return directionCommand === 0
-          ? [current[0] + 1, current[1]]
-          : [current[0] - 1, current[1]];
+          ? [[current[0] + 1, current[1]], "right"]
+          : [[current[0] - 1, current[1]], "left"];
       case "right":
         return directionCommand === 0
-          ? [current[0], current[1] + 1]
-          : [current[0], current[1] - 1];
+          ? [[current[0], current[1] + 1], "up"]
+          : [[current[0], current[1] - 1], "down"];
     }
   };
-  let expectedOutputNb = 1;
-  let color;
-  while (run) {
+
+  while (hullPaintingRobot.opCode !== 99) {
     const currPoint = colorsMap.get(point.join());
-    if (expectedOutputNb === 1) {
-      color = intCodeComputer(input, currPoint.color);
+    hullPaintingRobot = intCodeComputer(
+      hullPaintingRobot.intCode,
+      currPoint.color,
+      hullPaintingRobot
+    );
+    if (
+      hullPaintingRobot.opCode !== 99 &&
+      hullPaintingRobot.opCode !== 3 &&
+      hullPaintingRobot.output.length > 1
+    ) {
       colorsMap.set(point.join(), {
-        color,
+        color: hullPaintingRobot.output[0],
         paintsCount: currPoint.paintsCount + 1
       });
-      expectedOutputNb = 2;
-    } else {
+      [point, direction] = nextPoint(
+        direction,
+        hullPaintingRobot.output[1],
+        point
+      );
+      !colorsMap.has(point.join()) && setPoint(point);
+      hullPaintingRobot.resetOutput();
     }
   }
 
-  console.log(intCodeComputer(input, 2));
+  console.log(colorsMap.size); // Part 1
 });
