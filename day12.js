@@ -64,8 +64,16 @@ fs.readFile("./day12_input", "utf8", function(err, contents) {
       moons[i].z += moons[i].v.z;
     }
     t += 1;
-    if (t === 10) break;
+    if (t === 1000) break;
   }
 
-  console.log(moons);
+  console.log(
+    moons.reduce(
+      (acc, m) =>
+        acc +
+        (Math.abs(m.x) + Math.abs(m.y) + Math.abs(m.z)) *
+          (Math.abs(m.v.x) + Math.abs(m.v.y) + Math.abs(m.v.z)),
+      0
+    )
+  );
 });
