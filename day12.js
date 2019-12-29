@@ -49,6 +49,12 @@ fs.readFile("./day12_input", "utf8", function(err, contents) {
       { x: newV2[0], y: newV2[1], z: newV2[2] }
     ];
   };
+  const velocitiesReset = moons => {
+    const vels = moons.reduce((acc, m) => [...acc, m.v.x, m.v.y, m.v.z], []);
+
+    return vels.length === vels.filter(v => v === 0).length;
+  };
+
   const run = true;
   let t = 0;
   while (run) {
@@ -64,16 +70,8 @@ fs.readFile("./day12_input", "utf8", function(err, contents) {
       moons[i].z += moons[i].v.z;
     }
     t += 1;
-    if (t === 1000) break;
+    if (velocitiesReset(moons) && t > 1) break;
   }
 
-  console.log(
-    moons.reduce(
-      (acc, m) =>
-        acc +
-        (Math.abs(m.x) + Math.abs(m.y) + Math.abs(m.z)) *
-          (Math.abs(m.v.x) + Math.abs(m.v.y) + Math.abs(m.v.z)),
-      0
-    )
-  );
+  console.log(t * 2);
 });
