@@ -243,7 +243,9 @@ fs.readFile("./day13_input", "utf8", function(err, contents) {
   };
 
   let blocksCount = 0;
-  let screen = [];
+  let score = 0;
+  let paddlePosition = [];
+  let ballPosition = [];
   while (arcadeCabinet.opCode !== 99) {
     arcadeCabinet = intCodeComputer(arcadeCabinet.intCode, [], arcadeCabinet);
     if (
@@ -251,17 +253,26 @@ fs.readFile("./day13_input", "utf8", function(err, contents) {
       arcadeCabinet.opCode !== 3 &&
       arcadeCabinet.output.length > 2
     ) {
-      if (arcadeCabinet.output[2] === 2) blocksCount += 1;
-      if (!screen[arcadeCabinet.output[1]]) {
-        screen[arcadeCabinet.output[1]] = [];
+      if (arcadeCabinet.output[2] === 2) {
+        blocksCount += 1;
+      } else if (arcadeCabinet.output[2] === 3) {
+        paddlePosition = [arcadeCabinet.output[1], arcadeCabinet.output[0]];
+      } else if (arcadeCabinet.output[2] === 4) {
+        ballPosition = [arcadeCabinet.output[1], arcadeCabinet.output[0]];
       }
-      screen[arcadeCabinet.output[1]][arcadeCabinet.output[0]] = outputToTile(
-        arcadeCabinet.output[2]
-      );
+      if (arcadeCabinet.output[0] === -1 && arcadeCabinet.output[1] === 0)
+        score = arcadeCabinet.output[2];
 
-      arcadeCabinet.resetOutput();
+    } else if (arcadeCabinet.opCode === 3) {
+      arcadeCabinet = intCodeComputer(
+        arcadeCabinet.intCode,
+        [Math.sign(ballPosition[1] - paddlePosition[1])],
+        arcadeCabinet
+      );
     }
+
+    arcadeCabinet.resetOutput();
   }
 
-  console.log(blocksCount);
+  console.log(score);
 });
